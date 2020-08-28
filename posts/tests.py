@@ -1,8 +1,11 @@
+import os
+
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
+from PIL import Image
 
 from .models import Follow, Group, Post
 
@@ -127,11 +130,13 @@ class TestImage(TestCase):
         self.tag = "<img"
 
     def test_post_index_group_profile_has_an_img_tag(self):
-        img = SimpleUploadedFile(
-            "test.jpg",
-            open("media/posts/test_img.jpg", "rb").read(),
-            content_type="image/jpg",
-        )
+        img_pil = Image.new('RGB', (60, 30), color='red')
+        img_pil.save('media/posts/pil_red.png')
+
+        with open('media/posts/pil_red.png', 'rb') as file_image:
+            image_bin = file_image.read()
+
+        img = SimpleUploadedFile("test.png", image_bin, "image/png")
         post = Post.objects.create(
             text="test_text", author=self.user, image=img, group=self.group
         )
@@ -149,6 +154,9 @@ class TestImage(TestCase):
             with self.subTest(url=url):
                 resp = self.client_authorized.get(url)
                 self.assertContains(resp, self.tag)
+
+        os.remove('media/posts/pil_red.png')
+        os.remove('media/posts/test.png')
 
     def test_ungraphical_file_upload(self):
         not_img = SimpleUploadedFile("test_img.txt", content=b"abc")

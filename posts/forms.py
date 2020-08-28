@@ -17,7 +17,7 @@ class PostForm(ModelForm):
             'image': 'картинка к посту'
         }
 
-        fields = ['group', 'text', 'image',]
+        fields = ('group', 'text', 'image',)
 
 
 class CommentForm(ModelForm):

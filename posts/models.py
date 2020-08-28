@@ -35,7 +35,7 @@ class Post(models.Model):
         return f"{self.author}: {self.text[:10]}"
 
     class Meta:
-        ordering = ["-pub_date"]
+        ordering = ("-pub_date",)
 
 
 class Comment(models.Model):
@@ -65,6 +65,9 @@ class Follow(models.Model):
                                related_name="following")
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              related_name="follower")
+
+    class Meta:
+        unique_together = ('author', 'user',)
 
     def __str__(self):
         return self.user.username

@@ -11,7 +11,8 @@ def index(request):
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
-    return render(request, "index.html",
+    return render(request,
+                  "index.html",
                   {"page": page, "paginator": paginator})
 
 
@@ -23,29 +24,20 @@ def group_posts(request, slug):
     page = paginator.get_page(page_number)
 
     return render(
-        request, "group.html",
+        request,
+        "group.html",
         {"group": group, "page": page, "paginator": paginator}
     )
 
 
 @login_required
 def new_post(request):
-    button = "Создать"
-    title = "Новая запись"
     if not request.method == "POST":
         form = PostForm()
-        return render(
-            request,
-            "new.html",
-            context={"form": form, "button": button, "title": title},
-        )
+        return render(request, "new.html", {"form": form})
     form = PostForm(request.POST, files=request.FILES or None)
     if not form.is_valid():
-        return render(
-            request,
-            "new.html",
-            context={"form": form, "button": button, "title": title},
-        )
+        return render(request, "new.html", {"form": form})
     post_get = form.save(commit=False)
     post_get.author = request.user
     post_get.save()
@@ -90,8 +82,6 @@ def post_view(request, username, post_id):
 
 
 def post_edit(request, username, post_id):
-    button = "Сохранить"
-    title = "Редактирование записи"
     post = get_object_or_404(Post, pk=post_id, author__username=username)
     if post.author != request.user:
         return redirect("post", username=post.author, post_id=post.pk)
@@ -103,9 +93,8 @@ def post_edit(request, username, post_id):
         post.save()
         return redirect("post", username=post.author, post_id=post.pk)
     return render(
-        request,
-        "new.html",
-        {"form": form, "button": button, "title": title, "post": post},
+        request, "new.html",
+        {"form": form, "post": post, "is_form_edit": True},
     )
 
 
@@ -140,8 +129,7 @@ def add_comment(request, username, post_id):
 
 @login_required
 def follow_index(request):
-    authors = request.user.follower.all().values("author")
-    posts = Post.objects.filter(author__in=authors).all()
+    posts = Post.objects.filter(author__following__user=request.user)
     paginator = Paginator(posts, 10)
     page_number = request.GET.get("page")
     page = paginator.get_page(page_number)
